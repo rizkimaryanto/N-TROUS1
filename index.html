@@ -7,72 +7,97 @@
     <link rel="stylesheet" href="styles.css"> <!-- Tambahkan file CSS eksternal -->
     <script src="https://cdn.jsdelivr.net/npm/web3@1.7.1/dist/web3.min.js"></script>
     <style>
+        /* CSS tambahan untuk UI/UX */
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            text-align: center;
+            background-color: #f1f1f1;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            text-align: center;
         }
-
         .game-container {
-            background-color: #ffffff;
-            border-radius: 8px;
+            background-color: #fff;
+            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            margin: 0 auto;
+            margin-top: 50px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            margin: 50px auto;
         }
-
         h1 {
-            color: #4CAF50;
+            font-size: 2em;
+            margin-bottom: 20px;
         }
-
         input[type="text"] {
             padding: 10px;
             width: 80%;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
+            max-width: 400px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
         }
-
         .tap-button {
             background-color: #4CAF50;
-            color: white;
             border: none;
-            padding: 15px 20px;
-            font-size: 18px;
+            padding: 20px;
+            border-radius: 10px;
             cursor: pointer;
-            border-radius: 4px;
-            margin-top: 20px;
-            transition: background-color 0.3s ease;
-        }
-
-        .tap-button:hover {
-            background-color: #45a049;
-        }
-
-        .loading-spinner {
-            display: none;
+            display: inline-block;
             margin-top: 20px;
         }
-
-        #balance, #airdrop-date {
-            font-weight: bold;
+        .tap-button img {
+            width: 150px;
+            height: auto;
+        }
+        p {
+            font-size: 1.2em;
+        }
+        .menu {
+            margin-top: 20px;
+        }
+        .menu a {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        .menu a:hover {
+            background-color: #0056b3;
+        }
+        .leaderboard {
+            margin-top: 30px;
         }
     </style>
 </head>
 <body>
     <div class="game-container">
         <h1>NITROUS (POLYGON)</h1>
-        <input type="text" id="account" placeholder="Masukkan alamat POLYGON anda">
+
+        <!-- Menu -->
+        <div class="menu">
+            <a href="#">Tanggal Airdrop</a>
+            <a href="#">Game</a>
+            <a href="#">Hubungkan ke Wallet</a>
+        </div>
+
+        <!-- Input dan status -->
+        <input type="text" id="account" placeholder="Masukan alamat POLYGON anda">
         <p><strong>Saldo N-TROUS anda:</strong> <span id="balance">0</span></p>
-        <p><strong>Status Airdrop:</strong> <span id="airdrop-date">1 Januari 2025</span></p>
+        <p><strong>Status Airdrop:</strong> 1 Januari 2025</p>
+
+        <!-- Tombol Klik -->
         <button id="tapButton" class="tap-button">
-            Klik untuk Menambah Koin
+            <img src="file-eOazIxX7ClmJfAfr7XuRc4og.webp" alt="Button" id="button-image">
         </button>
-        <div id="loading" class="loading-spinner">Sedang memproses...</div>
+
+        <!-- Leaderboard -->
+        <div class="leaderboard" id="leaderboard">
+            <h2>Leaderboard</h2>
+            <ul id="leaderboardList"></ul>
+        </div>
     </div>
 
     <!-- Audio -->
@@ -82,78 +107,70 @@
         // Inisialisasi Web3
         const web3 = new Web3(new Web3.providers.HttpProvider("https://polygon-mainnet.infura.io/v3/4b83836820944bf0bba486179ee4dbfd"));
         const contractAddress = "0xd863ba508ce896960D2a885eAFD84Bb5179B1f5D";
-        const contractABI = [
-            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"rewardAmount","type":"uint256"}],"name":"AirdropDistributed","type":"event"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardAccumulated","type":"event"},
-            {"inputs":[],"name":"accumulateReward","outputs":[],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[],"name":"airdropDate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-            {"inputs":[],"name":"airdropDistributed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
-            {"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-            {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
-            {"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
-            {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
-        ];
+        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"rewardAmount","type":"uint256"}],"name":"AirdropDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardAccumulated","type":"event"},{"inputs":[],"name":"accumulateReward","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"airdropDate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"airdropDistributed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
         const contract = new web3.eth.Contract(contractABI, contractAddress);
-
-        // Cek jaringan Polygon
-        async function checkNetwork() {
-            const chainId = await web3.eth.getChainId();
-            if (chainId !== 137) { // Polygon Mainnet ID
-                alert("Harap pilih jaringan Polygon (ID 137) di MetaMask.");
-            }
-        }
-
-        // Update saldo dan tanggal airdrop
-        async function updateUI() {
-            const account = document.getElementById('account').value;
-            if (account) {
-                try {
-                    const balance = await contract.methods.balanceOf(account).call();
-                    document.getElementById('balance').textContent = balance;
-                    const airdropDate = await contract.methods.airdropDate().call();
-                    document.getElementById('airdrop-date').textContent = new Date(parseInt(airdropDate) * 1000).toLocaleDateString();
-                } catch (error) {
-                    alert("Gagal memuat data, coba lagi.");
-                }
-            }
-        }
 
         // Fungsi klik tombol
         document.getElementById('tapButton').addEventListener('click', async function() {
             const sound = document.getElementById('clickSound');
             sound.play();
-            
-            // Menampilkan loading spinner
-            document.getElementById('loading').style.display = 'block';
 
+            // Simulasi penambahan koin setiap klik
             const account = document.getElementById('account').value;
             if (account) {
+                // Menambah alamat ke kontrak
                 try {
-                    const balance = await contract.methods.balanceOf(account).call();
-                    const newBalance = parseInt(balance) + 1; // Menambah 1 koin per klik
-                    document.getElementById('balance').textContent = newBalance;
-                    
                     const accounts = await web3.eth.getAccounts();
                     await contract.methods.accumulateReward().send({ from: accounts[0] });
 
-                    // Menyembunyikan loading spinner setelah transaksi selesai
-                    document.getElementById('loading').style.display = 'none';
-                    alert("Koin berhasil ditambahkan!");
+                    // Tambahkan ke Firebase untuk leaderboard
+                    const leaderboardRef = firebase.database().ref('leaderboard');
+                    leaderboardRef.push({
+                        address: account,
+                        timestamp: Date.now()
+                    });
+
+                    const balance = await contract.methods.balanceOf(account).call();
+                    const newBalance = parseInt(balance) + 1; // Menambah 1 koin per klik
+                    document.getElementById('balance').textContent = newBalance;
+
+                    alert("Alamat berhasil ditambahkan sebagai partisipan!");
+
                 } catch (error) {
                     console.error("Transaksi gagal:", error);
-                    document.getElementById('loading').style.display = 'none';
-                    alert("Terjadi kesalahan saat menambahkan koin. Coba lagi.");
                 }
             } else {
                 alert("Masukkan alamat POLYGON anda!");
-                document.getElementById('loading').style.display = 'none';
             }
         });
 
-        // Panggil fungsi untuk memeriksa jaringan dan memperbarui UI pada awal
-        checkNetwork();
-        updateUI();
+        // Ambil data leaderboard dari Firebase
+        const leaderboardRef = firebase.database().ref('leaderboard');
+        leaderboardRef.on('child_added', function(data) {
+            const leaderboardList = document.getElementById('leaderboardList');
+            const li = document.createElement('li');
+            li.textContent = `Alamat: ${data.val().address}, Tanggal: ${new Date(data.val().timestamp).toLocaleString()}`;
+            leaderboardList.appendChild(li);
+        });
+    </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
+    <script>
+        // Konfigurasi Firebase
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "https://airdropnitrous-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Inisialisasi Firebase
+        const app = firebase.initializeApp(firebaseConfig);
     </script>
 </body>
 </html>
