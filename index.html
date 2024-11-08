@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Token Interface</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.1/dist/web3.min.js"></script>
+</head>
+<body>
+    <h2>Token Interface</h2>
+    <div>
+        <button onclick="getTokenDetails()">Lihat Detail Token</button>
+        <p><strong>Nama:</strong> <span id="name"></span></p>
+        <p><strong>Simbol:</strong> <span id="symbol"></span></p>
+        <p><strong>Total Supply:</strong> <span id="totalSupply"></span></p>
+        <p><strong>Desimal:</strong> <span id="decimals"></span></p>
+    </div>
+    
+    <div>
+        <button onclick="getBalance()">Lihat Saldo</button>
+        <input type="text" id="account" placeholder="Alamat Akun">
+        <p><strong>Saldo:</strong> <span id="balance"></span></p>
+    </div>
+    
+    <div>
+        <button onclick="accumulateReward()">Kumpulkan Reward</button>
+        <p><strong>Reward Terkumpul:</strong> <span id="rewardAccumulated"></span></p>
+    </div>
+    
+    <div>
+        <button onclick="distributeAirdrop()">Distribusikan Airdrop</button>
+        <p><strong>Status Airdrop Terdistribusi:</strong> <span id="airdropDistributed"></span></p>
+    </div>
+    
+    <script>
+        // Inisialisasi Web3
+        const web3 = new Web3(new Web3.providers.HttpProvider("https://polygon-mainnet.infura.io/v3/4b83836820944bf0bba486179ee4dbfd"));
+
+        // Alamat kontrak dan ABI
+        const contractAddress = "0xd863ba508ce896960D2a885eAFD84Bb5179B1f5D";
+        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"rewardAmount","type":"uint256"}],"name":"AirdropDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardAccumulated","type":"event"},{"inputs":[],"name":"accumulateReward","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"airdropDate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"airdropDistributed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balances","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"distributeAirdrop","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"participants","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"rewardPerClick","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"rewardsAccumulated","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+        const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        async function getTokenDetails() {
+            const name = await contract.methods.name().call();
+            const symbol = await contract.methods.symbol().call();
+            const totalSupply = await contract.methods.totalSupply().call();
+            const decimals = await contract.methods.decimals().call();
+            document.getElementById("name").textContent = name;
+            document.getElementById("symbol").textContent = symbol;
+            document.getElementById("totalSupply").textContent = totalSupply;
+            document.getElementById("decimals").textContent = decimals;
+        }
+
+        async function getBalance() {
+            const account = document.getElementById("account").value;
+            const balance = await contract.methods.balanceOf(account).call();
+            document.getElementById("balance").textContent = balance;
+        }
+
+        async function accumulateReward() {
+            const accounts = await web3.eth.getAccounts();
+            await contract.methods.accumulateReward().send({ from: accounts[0] });
+            document.getElementById("rewardAccumulated").textContent = "Reward Terkumpul";
+        }
+
+        async function distributeAirdrop() {
+            const accounts = await web3.eth.getAccounts();
+            await contract.methods.distributeAirdrop().send({ from: accounts[0] });
+            const airdropStatus = await contract.methods.airdropDistributed().call();
+            document.getElementById("airdropDistributed").textContent = airdropStatus ? "Airdrop Sudah Terdistribusi" : "Belum Terdistribusi";
+        }
+    </script>
+</body>
+</html>
