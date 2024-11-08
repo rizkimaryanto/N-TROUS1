@@ -6,16 +6,73 @@
     <title>NITROUS Game Tap</title>
     <link rel="stylesheet" href="styles.css"> <!-- Tambahkan file CSS eksternal -->
     <script src="https://cdn.jsdelivr.net/npm/web3@1.7.1/dist/web3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #4CAF50;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 80%;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .tap-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .tap-button:hover {
+            background-color: #45a049;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #balance, #airdrop-date {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <div class="game-container">
         <h1>NITROUS (POLYGON)</h1>
-        <input type="text" id="account" placeholder="Masukan alamat POLYGON anda">
+        <input type="text" id="account" placeholder="Masukkan alamat POLYGON anda">
         <p><strong>Saldo N-TROUS anda:</strong> <span id="balance">0</span></p>
-        <p><strong>Status Airdrop:</strong> 1 Januari 2025</p>
+        <p><strong>Status Airdrop:</strong> <span id="airdrop-date">1 Januari 2025</span></p>
         <button id="tapButton" class="tap-button">
-            <img src="treasure_button.png" alt="Button" id="button-image">
+            Klik untuk Menambah Koin
         </button>
+        <div id="loading" class="loading-spinner">Sedang memproses...</div>
     </div>
 
     <!-- Audio -->
@@ -25,33 +82,78 @@
         // Inisialisasi Web3
         const web3 = new Web3(new Web3.providers.HttpProvider("https://polygon-mainnet.infura.io/v3/4b83836820944bf0bba486179ee4dbfd"));
         const contractAddress = "0xd863ba508ce896960D2a885eAFD84Bb5179B1f5D";
-        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"rewardAmount","type":"uint256"}],"name":"AirdropDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardAccumulated","type":"event"},{"inputs":[],"name":"accumulateReward","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"airdropDate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"airdropDistributed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+        const contractABI = [
+            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"rewardAmount","type":"uint256"}],"name":"AirdropDistributed","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardAccumulated","type":"event"},
+            {"inputs":[],"name":"accumulateReward","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[],"name":"airdropDate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"airdropDistributed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+        ];
         const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        // Cek jaringan Polygon
+        async function checkNetwork() {
+            const chainId = await web3.eth.getChainId();
+            if (chainId !== 137) { // Polygon Mainnet ID
+                alert("Harap pilih jaringan Polygon (ID 137) di MetaMask.");
+            }
+        }
+
+        // Update saldo dan tanggal airdrop
+        async function updateUI() {
+            const account = document.getElementById('account').value;
+            if (account) {
+                try {
+                    const balance = await contract.methods.balanceOf(account).call();
+                    document.getElementById('balance').textContent = balance;
+                    const airdropDate = await contract.methods.airdropDate().call();
+                    document.getElementById('airdrop-date').textContent = new Date(parseInt(airdropDate) * 1000).toLocaleDateString();
+                } catch (error) {
+                    alert("Gagal memuat data, coba lagi.");
+                }
+            }
+        }
 
         // Fungsi klik tombol
         document.getElementById('tapButton').addEventListener('click', async function() {
             const sound = document.getElementById('clickSound');
             sound.play();
+            
+            // Menampilkan loading spinner
+            document.getElementById('loading').style.display = 'block';
 
-            // Simulasi penambahan koin setiap klik
             const account = document.getElementById('account').value;
             if (account) {
-                const balance = await contract.methods.balanceOf(account).call();
-                const newBalance = parseInt(balance) + 1; // Menambah 1 koin per klik
-                document.getElementById('balance').textContent = newBalance;
-                
-                // Opsional: Simpan transaksi di blockchain
                 try {
+                    const balance = await contract.methods.balanceOf(account).call();
+                    const newBalance = parseInt(balance) + 1; // Menambah 1 koin per klik
+                    document.getElementById('balance').textContent = newBalance;
+                    
                     const accounts = await web3.eth.getAccounts();
                     await contract.methods.accumulateReward().send({ from: accounts[0] });
+
+                    // Menyembunyikan loading spinner setelah transaksi selesai
+                    document.getElementById('loading').style.display = 'none';
                     alert("Koin berhasil ditambahkan!");
                 } catch (error) {
                     console.error("Transaksi gagal:", error);
+                    document.getElementById('loading').style.display = 'none';
+                    alert("Terjadi kesalahan saat menambahkan koin. Coba lagi.");
                 }
             } else {
                 alert("Masukkan alamat POLYGON anda!");
+                document.getElementById('loading').style.display = 'none';
             }
         });
+
+        // Panggil fungsi untuk memeriksa jaringan dan memperbarui UI pada awal
+        checkNetwork();
+        updateUI();
     </script>
 </body>
 </html>
