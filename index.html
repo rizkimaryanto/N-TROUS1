@@ -149,8 +149,11 @@
                     try {
                         await window.ethereum.request({ method: 'eth_requestAccounts' });
                         const accounts = await web3.eth.getAccounts();
-                        document.getElementById('walletAddress').innerText = "Wallet Tersambung: " + accounts[0];
-                        alert('Wallet berhasil tersambung: ' + accounts[0]);
+                        const currentAccount = accounts[0];
+
+                        sessionStorage.setItem('connectedAccount', currentAccount);
+                        document.getElementById('walletAddress').innerText = "Wallet Tersambung: " + currentAccount;
+                        alert('Wallet berhasil tersambung: ' + currentAccount);
                     } catch (error) {
                         alert('Gagal menghubungkan ke wallet');
                     }
@@ -160,131 +163,71 @@
             }
 
             async function signTransaction() {
-                if (window.ethereum && web3.eth.accounts[0]) {
+                const connectedAccount = sessionStorage.getItem('connectedAccount');
+                if (window.ethereum && connectedAccount) {
                     try {
-                        const account = (await web3.eth.getAccounts())[0];
                         const message = "Konfirmasi transaksi di N-TROUS Game";
-                        const signature = await web3.eth.personal.sign(message, account, '');
+                        const signature = await web3.eth.personal.sign(message, connectedAccount, '');
                         alert('Tanda tangan berhasil: ' + signature);
                     } catch (error) {
-                        alert('Tanda tangan gagal');
+                        alert('Tanda tangan gagal: ' + error.message);
                     }
                 } else {
-                    alert('Sambungkan wallet Anda terlebih dahulu.');
-                }
-            }// Fungsi untuk menghubungkan wallet
+                    alert('Sambungkan wallet Anda terlebih dahulu.');}
+            }
+
             document.getElementById('connectWallet').addEventListener('click', connectWallet);
             document.getElementById('signTransaction').addEventListener('click', signTransaction);
-
-            // Fungsi untuk mengirim reward ke smart contract
-            async function sendReward() {
-                if (!window.ethereum) {
-                    alert('MetaMask tidak terdeteksi!');
-                    return;
-                }
-
-                const accounts = await web3.eth.getAccounts();
-                const account = accounts[0];
-
-                try {
-                    await contract.methods.accumulateReward().send({ from: account });
-                    alert("Reward berhasil ditambahkan!");
-                } catch (error) {
-                    alert("Gagal mengirim reward: " + error.message);
-                }
-            }
-
-            // Fungsi untuk menyimpan leaderboard ke Firebase
-            async function saveLeaderboardToFirebase() {
-                const username = localStorage.getItem('username') || 'Pengguna';
-                const score = parseInt(localStorage.getItem('coinCount')) || 0;
-
-                try {
-                    const leaderboardRef = database.ref('leaderboard').push();
-                    await leaderboardRef.set({
-                        username: username,
-                        score: score,
-                        date: new Date().toISOString()
-                    });
-                    alert("Skor berhasil disimpan ke leaderboard!");
-                } catch (error) {
-                    alert("Gagal menyimpan skor ke database: " + error.message);
-                }
-            }
-
-            // Event listener untuk menyimpan skor ke leaderboard Firebase
-            document.getElementById('saveLeaderboard').addEventListener('click', saveLeaderboardToFirebase);
         });
-
-        function saveUsername() {
-            const username = document.getElementById('usernameInput').value;
-            localStorage.setItem('username', username);
-            alert('Nama pengguna disimpan sebagai: ' + username);
-        }
     </script>
 </head>
 <body>
     <header>
-        <h1>Selamat Datang di N-TROUS</h1>
-        <nav>
-            <ul>
-                <li><a href="#" data-page="home">Home</a></li>
-                <li><a href="#" data-page="game">Game</a></li>
-                <li><a href="#" data-page="marketplace">Marketplace</a></li>
-                <li><a href="#" data-page="community">Community</a></li>
-                <li><a href="#" data-page="leaderboard">Leaderboard</a></li>
-                <li><a href="#" data-page="username">Nama Pengguna</a></li>
-                <li><a href="#" data-page="wallet">Wallet</a></li>
-            </ul>
-        </nav>
+        <h1>N-TROUS Game</h1>
     </header>
+
+    <nav>
+        <ul>
+            <li><a href="#" data-page="home">Home</a></li>
+            <li><a href="#" data-page="leaderboard">Leaderboard</a></li>
+            <li><a href="#" data-page="contact">Contact</a></li>
+        </ul>
+    </nav>
+
     <main>
         <section id="home" class="page-section">
-            <h2>Home</h2>
-            <p>Selamat datang di N-TROUS, tempat Anda bisa memainkan game dan mendapatkan GCO!</p>
-        </section>
+            <h2>Selamat datang di N-TROUS Game</h2>
+            <p>Permainan ini memungkinkan Anda untuk mengumpulkan GCO dengan mengetuk koin!</p>
+            <button id="startGame">Mulai Permainan</button>
 
-        <section id="game" class="page-section">
-            <h2>Game</h2>
-            <p>Tap pada koin untuk mendapatkan GCO!</p>
-            <button id="startGame">Mulai Bermain</button>
-            <div id="coinAnimation">GCO</div>
-            <div id="coinCount">GCO: 0</div>
-        </section>
-
-        <section id="marketplace" class="page-section">
-            <h2>Marketplace</h2>
-            <p>Marketplace di mana Anda dapat menukar atau membeli item dengan GCO Anda.</p>
-            <a href="https://coinmarketcap.com/dexscan/polygon/0xccf259625605d763fa7732e5f04bb0068e04246e" target="_blank">Buka Marketplace</a>
-        </section>
-
-        <section id="community" class="page-section">
-            <h2>Community</h2>
-            <p>Bergabunglah dengan komunitas kami untuk diskusi dan pembaruan terbaru.</p>
+            <div id="coinAnimation">
+                <span>Tap Koin</span>
+            </div>
+            <p id="coinCount">GCO: 0</p>
         </section>
 
         <section id="leaderboard" class="page-section">
             <h2>Leaderboard</h2>
-            <div id="leaderboardList">Peringkat tertinggi akan muncul di sini</div>
-            <button id="saveLeaderboard">Simpan Skor ke Leaderboard</button>
+            <div id="leaderboardList">
+                <!-- Daftar leaderboard akan muncul di sini -->
+            </div>
         </section>
 
-        <section id="username" class="page-section">
-            <h2>Atur Nama Pengguna</h2>
-            <input type="text" id="usernameInput" placeholder="Masukkan nama pengguna">
-            <button onclick="saveUsername()">Simpan Nama Pengguna</button>
+        <section id="contact" class="page-section">
+            <h2>Hubungi Kami</h2>
+            <p>Untuk lebih lanjut, kunjungi <a href="https://t.me/CryptoAirdropOpen" target="_blank">Telegram Kami</a></p>
         </section>
 
-        <section id="wallet" class="page-section">
-            <h2>Hubungkan Wallet</h2>
-            <button id="connectWallet">Hubungkan ke MetaMask</button>
-            <p id="walletAddress">Wallet: Tidak terhubung</p>
-            <button id="signTransaction">Tanda Tangan Transaksi</button>
-            <button onclick="sendReward()">Kirim Reward ke Smart Contract</button>
+        <section id="walletSection">
+            <h2>Connect Wallet</h2>
+            <button id="connectWallet">Connect MetaMask</button>
+            <p id="walletAddress">Wallet belum tersambung</p>
+            <button id="signTransaction">Sign Transaksi</button>
         </section>
     </main>
+
     <footer>
-        <p>&copy; 2024 N-TROUS</p>
+        <p>&copy; 2024 N-TROUS Game. Semua hak dilindungi.</p>
     </footer>
 </body>
 </html>
