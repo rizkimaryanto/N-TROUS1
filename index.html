@@ -3,54 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N-TROUS Game Interface</title>
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.3/dist/web3.min.js"></script>
+    <title>N-TROUS Game</title>
     <style>
-        /* Gaya CSS yang sama */
-    </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            const contractAddress = "0xd863ba508ce896960D2a885eAFD84Bb5179B1f5D";
-            const infuraUrl = "https://polygon-mainnet.infura.io/v3/4b83836820944bf0bba486179ee4dbfd";
-            const ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"rewardAmount","type":"uint256"}],"name":"AirdropDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardAccumulated","type":"event"},{"inputs":[],"name":"accumulateReward","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"airdropDate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"airdropDistributed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balances","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"distributeAirdrop","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"participants","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"rewardPerClick","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"rewardsAccumulated","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
 
-            let web3 = new Web3(new Web3.providers.HttpProvider(infuraUrl));
-            let contract = new web3.eth.Contract(ABI, contractAddress);
+        header {
+            background: #007bff;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        nav ul li {
+            display: inline;
+            margin: 0 15px;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        main {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        #coinAnimation {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            border-radius: 50%;
+            box-shadow: 0px 0px 20px rgba(0, 114, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin: 20px auto;
+        }
+
+        #coinAnimation:hover {
+            transform: scale(1.1);
+            box-shadow: 0px 0px 30px rgba(0, 114, 255, 0.8);
+        }
+
+        #coinAnimation:active {
+            transform: scale(1.2);
+            box-shadow: 0px 0px 40px rgba(0, 114, 255, 0.9);
+        }
+
+        #coinCount {
+            font-size: 24px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .page-section {
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.1/web3.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-database-compat.js"></script>
+    <script>
+        // Konfigurasi Firebase
+        const firebaseConfig = {
+            databaseURL: "https://airdropnitrous-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Koneksi ke jaringan Polygon melalui Infura
+        const web3 = new Web3(new Web3.providers.HttpProvider("https://polygon-mainnet.infura.io/v3/4b83836820944bf0bba486179ee4dbfd"));
+
+        // Smart contract address dan ABI
+        const contractAddress = "0xd863ba508ce896960D2a885eAFD84Bb5179B1f5D";
+        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"rewardAmount","type":"uint256"}],"name":"AirdropDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardAccumulated","type":"event"},{"inputs":[],"name":"accumulateReward","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"airdropDate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"airdropDistributed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balances","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"distributeAirdrop","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"participants","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"rewardPerClick","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"rewardsAccumulated","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+        const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        document.addEventListener('DOMContentLoaded', function() {
             let coinCount = parseInt(localStorage.getItem('coinCount')) || 0;
             document.getElementById('coinCount').innerText = 'GCO: ' + coinCount;
 
-            // Fungsi untuk berinteraksi dengan smart contract
-            async function accumulateReward() {
-                if (!window.ethereum) {
-                    alert('Install MetaMask untuk melanjutkan!');
-                    return;
-                }
-                try {
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    const accounts = await web3.eth.getAccounts();
-                    await contract.methods.accumulateReward().send({ from: accounts[0] });
-                    alert('Reward berhasil diakumulasikan!');
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Gagal mengakumulasi reward.');
-                }
-            }
-
-            async function getBalance(address) {
-                try {
-                    const balance = await contract.methods.balanceOf(address).call();
-                    return balance;
-                } catch (error) {
-                    console.error('Error:', error);
-                    return 0;
-                }
-            }
-
-            document.getElementById('coinAnimation').addEventListener('click', async function() {
+            document.getElementById('coinAnimation').addEventListener('click', function() {
                 coinCount++;
                 document.getElementById('coinCount').innerText = 'GCO: ' + coinCount;
                 localStorage.setItem('coinCount', coinCount);
-                await accumulateReward(); // Memanggil fungsi accumulateReward saat koin diklik
                 updateLeaderboard();
             });
 
@@ -84,6 +142,78 @@
             }
 
             showPage('home');
+
+            async function connectWallet() {
+                if (window.ethereum) {
+                    window.web3 = new Web3(window.ethereum);
+                    try {
+                        await window.ethereum.request({ method: 'eth_requestAccounts' });
+                        const accounts = await web3.eth.getAccounts();
+                        document.getElementById('walletAddress').innerText = "Wallet Tersambung: " + accounts[0];
+                        alert('Wallet berhasil tersambung: ' + accounts[0]);
+                    } catch (error) {
+                        alert('Gagal menghubungkan ke wallet');
+                    }
+                } else {
+                    alert('MetaMask tidak terdeteksi! Silakan instal MetaMask.');
+                }
+            }
+
+            async function signTransaction() {
+                if (window.ethereum && web3.eth.accounts[0]) {
+                    try {
+                        const account = (await web3.eth.getAccounts())[0];
+                        const message = "Konfirmasi transaksi di N-TROUS Game";
+                        const signature = await web3.eth.personal.sign(message, account, '');
+                        alert('Tanda tangan berhasil: ' + signature);
+                    } catch (error) {
+                        alert('Tanda tangan gagal');
+                    }
+                } else {
+                    alert('Sambungkan wallet Anda terlebih dahulu.');
+                }
+            }// Fungsi untuk menghubungkan wallet
+            document.getElementById('connectWallet').addEventListener('click', connectWallet);
+            document.getElementById('signTransaction').addEventListener('click', signTransaction);
+
+            // Fungsi untuk mengirim reward ke smart contract
+            async function sendReward() {
+                if (!window.ethereum) {
+                    alert('MetaMask tidak terdeteksi!');
+                    return;
+                }
+
+                const accounts = await web3.eth.getAccounts();
+                const account = accounts[0];
+
+                try {
+                    await contract.methods.accumulateReward().send({ from: account });
+                    alert("Reward berhasil ditambahkan!");
+                } catch (error) {
+                    alert("Gagal mengirim reward: " + error.message);
+                }
+            }
+
+            // Fungsi untuk menyimpan leaderboard ke Firebase
+            async function saveLeaderboardToFirebase() {
+                const username = localStorage.getItem('username') || 'Pengguna';
+                const score = parseInt(localStorage.getItem('coinCount')) || 0;
+
+                try {
+                    const leaderboardRef = database.ref('leaderboard').push();
+                    await leaderboardRef.set({
+                        username: username,
+                        score: score,
+                        date: new Date().toISOString()
+                    });
+                    alert("Skor berhasil disimpan ke leaderboard!");
+                } catch (error) {
+                    alert("Gagal menyimpan skor ke database: " + error.message);
+                }
+            }
+
+            // Event listener untuk menyimpan skor ke leaderboard Firebase
+            document.getElementById('saveLeaderboard').addEventListener('click', saveLeaderboardToFirebase);
         });
 
         function saveUsername() {
@@ -104,6 +234,7 @@
                 <li><a href="#" data-page="community">Community</a></li>
                 <li><a href="#" data-page="leaderboard">Leaderboard</a></li>
                 <li><a href="#" data-page="username">Nama Pengguna</a></li>
+                <li><a href="#" data-page="wallet">Wallet</a></li>
             </ul>
         </nav>
     </header>
@@ -130,12 +261,12 @@
         <section id="community" class="page-section">
             <h2>Community</h2>
             <p>Bergabunglah dengan komunitas kami untuk diskusi dan pembaruan terbaru.</p>
-            <a href="https://t.me/CryptoAirdropOpen" target="_blank">Gabung Telegram</a>
         </section>
 
         <section id="leaderboard" class="page-section">
             <h2>Leaderboard</h2>
             <div id="leaderboardList">Peringkat tertinggi akan muncul di sini</div>
+            <button id="saveLeaderboard">Simpan Skor ke Leaderboard</button>
         </section>
 
         <section id="username" class="page-section">
@@ -143,9 +274,17 @@
             <input type="text" id="usernameInput" placeholder="Masukkan nama pengguna">
             <button onclick="saveUsername()">Simpan Nama Pengguna</button>
         </section>
+
+        <section id="wallet" class="page-section">
+            <h2>Hubungkan Wallet</h2>
+            <button id="connectWallet">Hubungkan ke MetaMask</button>
+            <p id="walletAddress">Wallet: Tidak terhubung</p>
+            <button id="signTransaction">Tanda Tangan Transaksi</button>
+            <button onclick="sendReward()">Kirim Reward ke Smart Contract</button>
+        </section>
     </main>
     <footer>
-        <p>&copy; 2024 N-TROUS. Ikuti kami di <a href="https://t.me/CryptoAirdropOpen" target="_blank">Telegram</a>.</p>
+        <p>&copy; 2024 N-TROUS</p>
     </footer>
 </body>
 </html>
