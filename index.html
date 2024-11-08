@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #007bff;
+            background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
         }
@@ -81,6 +81,17 @@
             text-align: center;
             margin-top: 20px;
         }
+
+        .input-group {
+            margin: 10px 0;
+        }
+
+        #usernameAlert {
+            color: green;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.1/web3.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
@@ -173,11 +184,36 @@
                         alert('Tanda tangan gagal: ' + error.message);
                     }
                 } else {
-                    alert('Sambungkan wallet Anda terlebih dahulu.');}
+                    alert('Sambungkan wallet Anda terlebih dahulu.');
+                }
             }
 
             document.getElementById('connectWallet').addEventListener('click', connectWallet);
             document.getElementById('signTransaction').addEventListener('click', signTransaction);
+
+            // Menambahkan nama pengguna
+            const usernameInput = document.getElementById('usernameInput');
+            const saveUsernameButton = document.getElementById('saveUsernameButton');
+            const usernameAlert = document.getElementById('usernameAlert');
+
+            // Jika nama pengguna telah tersimpan
+            if (localStorage.getItem('username')) {
+                usernameInput.value = localStorage.getItem('username');
+                usernameInput.disabled = true;
+                saveUsernameButton.disabled = true;
+                usernameAlert.innerText = 'Nama Anda sudah tersimpan: ' + localStorage.getItem('username');
+            }
+
+            saveUsernameButton.addEventListener('click', function() {
+                const username = usernameInput.value.trim();
+                if (username !== '') {
+                    localStorage.setItem('username', username);
+                    usernameInput.value = '';  // Mengosongkan kolom input setelah disimpan
+                    usernameInput.disabled = true;
+                    saveUsernameButton.disabled = true;
+                    usernameAlert.innerText = 'Nama Anda sudah tersimpan: ' + username;
+                }
+            });
         });
     </script>
 </head>
@@ -223,6 +259,15 @@
             <button id="connectWallet">Connect MetaMask</button>
             <p id="walletAddress">Wallet belum tersambung</p>
             <button id="signTransaction">Sign Transaksi</button>
+        </section>
+
+        <section id="usernameSection">
+            <h2>Set Nama Pengguna</h2>
+            <div class="input-group">
+                <input type="text" id="usernameInput" placeholder="Masukkan Nama Anda" />
+                <button id="saveUsernameButton">Simpan Nama</button>
+            </div>
+            <p id="usernameAlert"></p>
         </section>
     </main>
 
