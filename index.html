@@ -1,65 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NITROUS (POLYGON)</title>
+    <title>NITROUS Game Tap</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Tambahkan file CSS eksternal -->
     <script src="https://cdn.jsdelivr.net/npm/web3@1.7.1/dist/web3.min.js"></script>
-    <style>
-        body {
-            background-image: url('treasure_button.png');
-            background-size: cover;
-            background-repeat: no-repeat;
-            text-align: center;
-            font-family: Arial, sans-serif;
-        }
-        h1 {
-            color: blue;
-        }
-        .info-text {
-            color: blue;
-        }
-        button {
-            background: url('file-eOazIxX7ClmJfAfr7XuRc4og.webp') no-repeat center center;
-            background-size: cover;
-            border: none;
-            width: 100px;
-            height: 100px;
-            cursor: pointer;
-            display: block;
-            margin: 20px auto;
-        }
-        input {
-            padding: 5px;
-            margin: 10px 0;
-        }
-    </style>
 </head>
 <body>
-    <h1>NITROUS (POLYGON)</h1>
-    <div>
-        <p class="info-text">Masukan alamat POLYGON anda</p>
-        <input type="text" id="polygonAddress" placeholder="Alamat Polygon Anda">
-        <p class="info-text">Saldo N-TROUS anda</p>
-        <p id="balance">0</p>
-        <button id="collectReward" onclick="collectReward()">Kumpulkan Reward</button>
-        <p class="info-text">Status Airdrop Terdistribusi: 01-01-2025</p>
+    <div class="game-container">
+        <h1>NITROUS (POLYGON)</h1>
+        <input type="text" id="account" placeholder="Masukan alamat POLYGON anda">
+        <p><strong>Saldo N-TROUS anda:</strong> <span id="balance">0</span></p>
+        <p><strong>Status Airdrop:</strong> 1 Januari 2025</p>
+        <button id="tapButton" class="tap-button">
+            <img src="treasure_button.png" alt="Button" id="button-image">
+        </button>
     </div>
 
-    <script>
-        // Web3 Initialization
-        const web3 = new Web3(new Web3.providers.HttpProvider("https://polygon-mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID"));
+    <!-- Audio -->
+    <audio id="clickSound" src="8_Nov_23.58.m4a"></audio>
 
-        // Contract Address and ABI
+    <script>
+        // Inisialisasi Web3
+        const web3 = new Web3(new Web3.providers.HttpProvider("https://polygon-mainnet.infura.io/v3/4b83836820944bf0bba486179ee4dbfd"));
         const contractAddress = "0xd863ba508ce896960D2a885eAFD84Bb5179B1f5D";
-        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"rewardAmount","type":"uint256"}],"name":"AirdropDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardAccumulated","type":"event"},{"inputs":[],"name":"accumulateReward","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"airdropDate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"airdropDistributed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balances","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"distributeAirdrop","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"participants","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"rewardPerClick","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"rewardsAccumulated","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"rewardAmount","type":"uint256"}],"name":"AirdropDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardAccumulated","type":"event"},{"inputs":[],"name":"accumulateReward","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"airdropDate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"airdropDistributed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
         const contract = new web3.eth.Contract(contractABI, contractAddress);
 
-        async function collectReward() {
-            const accounts = await web3.eth.getAccounts();
-            await contract.methods.accumulateReward().send({ from: accounts[0] });
-            alert("Reward Terkumpul!");
-        }
+        // Fungsi klik tombol
+        document.getElementById('tapButton').addEventListener('click', async function() {
+            const sound = document.getElementById('clickSound');
+            sound.play();
+
+            // Simulasi penambahan koin setiap klik
+            const account = document.getElementById('account').value;
+            if (account) {
+                const balance = await contract.methods.balanceOf(account).call();
+                const newBalance = parseInt(balance) + 1; // Menambah 1 koin per klik
+                document.getElementById('balance').textContent = newBalance;
+                
+                // Opsional: Simpan transaksi di blockchain
+                try {
+                    const accounts = await web3.eth.getAccounts();
+                    await contract.methods.accumulateReward().send({ from: accounts[0] });
+                    alert("Koin berhasil ditambahkan!");
+                } catch (error) {
+                    console.error("Transaksi gagal:", error);
+                }
+            } else {
+                alert("Masukkan alamat POLYGON anda!");
+            }
+        });
     </script>
 </body>
 </html>
